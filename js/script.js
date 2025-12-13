@@ -6,7 +6,7 @@
 const SUPABASE_URL = 'https://kkzlhgsnizzpnfjwhhim.supabase.co'; 
 const SUPABASE_ANON_KEY = 'sb_publishable_k5orycO4a8oQrDVJ-cIzhg_EUp-LvHA'; 
 
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // HTML 요소 정의 (닉네임 입력 및 랭킹 영역)
 const startAuthScreen = document.getElementById('start-auth-screen');
