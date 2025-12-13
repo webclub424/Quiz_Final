@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌍 SDG 기후 퀴즈 배틀</title>
+    <link rel="stylesheet" href="css/style.css"> 
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script> 
+</head>
+
+<body>
+    
+    <div id="start-auth-screen" class="quiz-container">
+        <h2>퀴즈 배틀 참가 등록</h2>
+        <input type="text" id="nickname-input" placeholder="닉네임을 입력하세요" required maxlength="10"><br>
+        
+        <button id="start-button-with-nickname" class="auth-button">퀴즈 시작!</button>
+        
+        <p id="auth-message" style="color: red; margin-top: 15px;"></p>
+
+        <div id="ranking-container">
+            <h3>🏆 명예의 전당 (Top 10)</h3>
+            <ul id="ranking-list">
+                <li>데이터를 불러오는 중입니다...</li>
+            </ul>
+        </div>
+    </div>
+
+    <div id="main-quiz-container" class="quiz-container" style="display: none;">
+        
+        <h1>SDG 기후 퀴즈 배틀 💡</h1>
+        <div id="quiz-status">
+            <p>총 문제: <span id="total-questions">20</span>문항</p>
+            <p>현재 점수: <span id="current-score">0</span>점</p>
+        </div>
+
+        <div id="quiz-area" style="display: none;">
+            <p id="question-number"></p>
+            <h2 id="question-text">퀴즈가 여기에 표시됩니다.</h2>
+            
+            <div id="options">
+                <button class="answer-button" data-answer="O">O (맞음)</button>
+                <button class="answer-button" data-answer="X">X (틀림)</button>
+            </div>
+            
+            <p class="keyboard-guide">
+                [O/X 또는 1/2 키로 선택] → [→(방향키)로 다음 문제]
+            </p>
+            
+            <div id="feedback" style="display: none;">
+                <p id="result-message"></p>
+                <div id="explanation-box">
+                    <strong>해설:</strong> <span id="explanation-text"></span>
+                </div>
+                <button id="next-button">다음 문제</button>
+            </div>
+        </div>
+
+        <div id="result-screen" style="display: none;">
+            <h2>⭐ 퀴즈 결과 ⭐</h2>
+            <p id="final-score"></p>
+            <button id="restart-button">다시 시작 / 랭킹 보기</button>
+        </div>
+
+    </div>
+
+    <script src="js/script.js"></script>
+</body>
+</html>
