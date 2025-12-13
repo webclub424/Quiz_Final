@@ -3,8 +3,8 @@
 // =======================================================
 
 // ⚠️ 여기에 복사하신 Project URL과 PUBLIC KEY를 넣어주세요! 
-const SUPABASE_URL = 'https://zqnbthklyqhxobalnqdc.supabase.co'; 
-const SUPABASE_ANON_KEY = 'sb_publishable_4C3GZpHPUBXuQpPS2BnacA_Yw6SdPn4'; 
+const SUPABASE_URL = 'https://kkzlhgsnizzpnfjwhhim.supabase.co'; 
+const SUPABASE_ANON_KEY = 'sb_publishable_k5orycO4a8oQrDVJ-cIzhg_EUp-LvHA'; 
 
 const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
