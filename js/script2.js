@@ -883,14 +883,19 @@ function checkCardAnswer(index, userChoice) {
     resultInfo.style.display = 'block';
     cardsFlippedCount++;
 
-    if (userChoice === cardData.answer) {
+if (userChoice === cardData.answer) {
         cardData.status = 'correct';
         cardQuizScore++;
-        innerElement.style.backgroundColor = '#2ecc71'; // 정답: 초록색
+        // .flip-card-back 요소에 클래스나 직접 색상을 추가
+        const backSide = cardElement.querySelector('.flip-card-back');
+        backSide.style.backgroundColor = '#2ecc71'; // 초록색
+        backSide.style.color = 'white';
         resultLabel.innerHTML = "<strong>✅ 정답입니다!</strong>";
     } else {
         cardData.status = 'incorrect';
-        innerElement.style.backgroundColor = '#e74c3c'; // 오답: 빨간색
+        const backSide = cardElement.querySelector('.flip-card-back');
+        backSide.style.backgroundColor = '#e74c3c'; // 빨간색
+        backSide.style.color = 'white';
         resultLabel.innerHTML = `<strong>❌ 틀렸습니다. (정답: ${cardData.answer})</strong>`;
     }
 
