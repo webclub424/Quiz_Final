@@ -572,15 +572,11 @@ const cardNextButton = document.getElementById('card-next-button');
 
 /**
  * 최종 점수를 Supabase에 저장합니다. (모드별 점수 저장 로직 분기)
- */
-/**
- * 최종 점수를 Supabase에 저장합니다.
- */
 async function saveResult() {
     let rankCriteria = 0; 
     
     if (currentQuizMode === 'speed') {
-        // 맞힌 개수 우선(1000단위), 남은 시간 차선(1단위)
+        // 맞힌 개수 우선, 남은 시간 보조 (예: 12개 맞힘, 40초 남음 -> 12040)
         rankCriteria = (score * 1000) + timeLeft; 
     } else if (currentQuizMode === 'ox') {
         rankCriteria = score; 
@@ -602,11 +598,11 @@ async function saveResult() {
         if (error) throw error;
         
         console.log('결과 저장 성공:', rankCriteria, '모드:', currentQuizMode);
-        loadAllRankings(); // 저장 후 랭킹 새로고침
+        loadAllRankings(); 
 
     } catch (error) {
         console.error('결과 저장 중 오류:', error.message);
-        alert('결과 저장에 실패했습니다.');
+        finalScoreElement.textContent += ` (기록 저장 실패: ${error.message})`;
     }
 }
 /**
@@ -621,7 +617,7 @@ async function loadRanking(mode, listElement) {
             .from('quiz_results')
             .select('nickname, score')
             .eq('quiz_type', mode) 
-            .order('score', { ascending: false }) // 무조건 내림차순
+            .order('score', { ascending: false }) 
             .limit(10);
 
         if (error) throw error;
@@ -633,11 +629,9 @@ async function loadRanking(mode, listElement) {
                 let scoreText;
 
                 if (mode === 'speed') {
-                    // ✅ [수정] 조합된 점수를 다시 분해
-                    const solvedCount = Math.floor(item.score / 1000); // 12040 -> 12
-                    const timeLeftVal = item.score % 1000;             // 12040 -> 40
-                    const timeTaken = 60 - timeLeftVal;                // 걸린 시간 계산
-
+                    const solvedCount = Math.floor(item.score / 1000);
+                    const timeLeftVal = item.score % 1000;
+                    const timeTaken = 60 - timeLeftVal;
                     scoreText = `${solvedCount}개 (${timeTaken}초)`;
                 } else if (mode === 'card') {
                     scoreText = `${item.score}회 정답`;
@@ -651,11 +645,10 @@ async function loadRanking(mode, listElement) {
             listElement.innerHTML = '<li>아직 등록된 기록이 없습니다.</li>';
         }
     } catch (error) {
-        console.error('랭킹 로드 중 오류:', error.message);
+        console.error('랭킹 로드 오류:', error.message);
         listElement.innerHTML = '<li>랭킹 로드 실패.</li>';
     }
 }
-
 /**
  * 모든 퀴즈 모드의 랭킹을 한 번에 로드합니다. (홈 화면 표시용)
  */
@@ -817,152 +810,110 @@ function stopTimer() {
 
 // --- 카드 퀴즈 함수 (새로 추가) ---
 
+// ==========================================
+// 카드 퀴즈 새로운 로직 (O/X 직접 선택형)
+// ==========================================
+
 /**
- * 카드 퀴즈 화면에 카드를 동적으로 생성하고 표시합니다.
+ * 1. 카드 퀴즈 초기화: 20장의 카드를 생성합니다.
  */
 function initializeCardQuiz() {
-    cardContainer.innerHTML = '';
+    cardContainer.innerHTML = ''; 
+    cardQuizScore = 0; 
+    cardsFlippedCount = 0; 
     
-    // O/X 퀴즈의 'question'을 카드 앞면으로, 'explanation'을 카드 뒷면으로 사용합니다.
     cardModeQuestions = currentQuestions.map((q, index) => ({
+        ...q,
         id: index,
-        front: q.question,
-        back: q.explanation,
-        flipped: false,
-        completed: false // 카드가 정답으로 처리되었는지 여부
+        status: 'pending' // pending, correct, incorrect
     }));
 
     cardModeQuestions.forEach((card, index) => {
         const cardElement = document.createElement('div');
         cardElement.classList.add('flip-card');
         cardElement.setAttribute('data-index', index);
+        
         cardElement.innerHTML = `
             <div class="flip-card-inner">
                 <div class="flip-card-front">
-                    <h2>Q. ${index + 1}</h2>
-                    <p class="card-hint">클릭해서 문제를 확인하세요</p>
+                    <div class="card-badge">Q. ${index + 1}</div>
+                    <p>클릭하여 문제 확인</p>
                 </div>
                 <div class="flip-card-back">
-                    <p class="card-question">${card.front}</p>
-                    <div class="card-explanation-box">
-                        <p class="card-answer-text">정답 및 설명:</p>
-                        <p>${card.back}</p>
+                    <div class="card-content">
+                        <p class="card-question-text">${card.question}</p>
+                        <div class="card-btn-group" id="btn-group-${index}">
+                            <button class="card-ox-btn o-btn" onclick="checkCardAnswer(${index}, 'O')">O</button>
+                            <button class="card-ox-btn x-btn" onclick="checkCardAnswer(${index}, 'X')">X</button>
+                        </div>
+                        <div class="card-result-info" id="result-info-${index}" style="display:none;">
+                            <p class="result-label"></p>
+                            <p class="result-explanation">${card.explanation}</p>
+                        </div>
                     </div>
                 </div>
             </div>
         `;
+        
+        // 앞면 클릭 시 뒤집기만 담당
+        cardElement.querySelector('.flip-card-front').addEventListener('click', () => {
+            if (!cardElement.classList.contains('flipped')) {
+                cardElement.classList.add('flipped');
+            }
+        });
+        
         cardContainer.appendChild(cardElement);
-
-        cardElement.addEventListener('click', () => flipCard(index));
     });
 
-    // 초기 상태 설정
-    cardCorrectButton.style.display = 'none';
-    cardNextButton.style.display = 'none';
-    
-    // 점수판 업데이트
     updateCardScoreDisplay();
 }
 
 /**
- * 특정 카드를 뒤집고 상태를 업데이트합니다.
- * @param {number} index - 뒤집을 카드의 인덱스
+ * 2. O/X 버튼 클릭 시 정답 확인 및 카드 색상 변경
  */
-function flipCard(index) {
-    const card = cardModeQuestions[index];
+function checkCardAnswer(index, userChoice) {
+    const cardData = cardModeQuestions[index];
     const cardElement = cardContainer.querySelector(`[data-index="${index}"]`);
+    const innerElement = cardElement.querySelector('.flip-card-inner');
+    const btnGroup = document.getElementById(`btn-group-${index}`);
+    const resultInfo = document.getElementById(`result-info-${index}`);
+    const resultLabel = resultInfo.querySelector('.result-label');
 
-    if (card.completed || card.flipped) {
-        // 이미 완료되었거나 뒤집혀 있다면 아무것도 하지 않음
-        return; 
-    }
-    
-    // 이전에 뒤집힌 카드 찾아서 닫기 (선택적으로 하나만 열리게 하려면)
-    // const prevFlipped = cardContainer.querySelector('.flip-card.flipped');
-    // if (prevFlipped) {
-    //     prevFlipped.classList.remove('flipped');
-    //     cardModeQuestions[parseInt(prevFlipped.dataset.index)].flipped = false;
-    // }
+    if (cardData.status !== 'pending') return;
 
-    // 카드를 뒤집음
-    cardElement.classList.add('flipped');
-    card.flipped = true;
-    cardsFlippedCount++; // 시도 횟수 증가
+    btnGroup.style.display = 'none';
+    resultInfo.style.display = 'block';
+    cardsFlippedCount++;
 
-    // 정답 확인 및 다음으로 넘어갈 수 있도록 버튼 표시
-    cardCorrectButton.style.display = 'block';
-    cardNextButton.style.display = 'block';
-    
-    updateCardScoreDisplay(); // 시도 횟수 업데이트
-}
-
-/**
- * 정답 버튼 클릭 시 점수를 부여하고 해당 카드를 완료 처리합니다.
- */
-function markCardAsCorrect() {
-    // 현재 뒤집힌 카드(flipped)를 찾습니다.
-    const currentCardElement = cardContainer.querySelector('.flip-card.flipped');
-    
-    if (!currentCardElement) {
-        alert("먼저 카드를 뒤집어 문제를 확인해주세요!");
-        return;
-    }
-    
-    const currentCardIndex = parseInt(currentCardElement.dataset.index);
-    const card = cardModeQuestions[currentCardIndex];
-
-    // 점수 증가 및 상태 업데이트
-    cardQuizScore++; 
-    card.completed = true;
-    card.flipped = false; // 뒤집힌 상태 해제
-    
-    currentCardElement.classList.remove('flipped'); 
-    currentCardElement.classList.add('completed'); // 완료 표시
-
-    // 다음 문제로 넘어감
-    goToNextCard();
-}
-
-/**
- * 다음 카드로 넘어가거나 퀴즈를 종료합니다. (정답을 맞혔거나, 그냥 넘어갔거나)
- */
-function goToNextCard() {
-    // 1. 현재 뒤집힌 카드의 상태를 해제 (정답 처리 없이 넘어가는 경우)
-    const currentFlippedCardElement = cardContainer.querySelector('.flip-card.flipped');
-    
-    if (currentFlippedCardElement) {
-        // 뒤집힌 카드가 있다면, 카드를 다시 닫고 상태를 초기화합니다.
-        const index = parseInt(currentFlippedCardElement.dataset.index);
-        cardModeQuestions[index].flipped = false;
-        currentFlippedCardElement.classList.remove('flipped');
-    }
-
-    // 2. 다음 완료되지 않은 카드를 찾음
-    const nextCardIndex = cardModeQuestions.findIndex(card => !card.completed);
-
-    if (nextCardIndex !== -1) {
-        // 다음 미완료 카드가 남아 있다면
-        cardCorrectButton.style.display = 'none';
-        cardNextButton.style.display = 'none';
-
-        updateCardScoreDisplay(); // 점수 및 시도 횟수 업데이트
-        
+    if (userChoice === cardData.answer) {
+        cardData.status = 'correct';
+        cardQuizScore++;
+        innerElement.style.backgroundColor = '#2ecc71'; // 정답: 초록색
+        resultLabel.innerHTML = "<strong>✅ 정답입니다!</strong>";
     } else {
-        // 모든 카드를 완료했으면 결과 화면으로 이동
-        showResult();
+        cardData.status = 'incorrect';
+        innerElement.style.backgroundColor = '#e74c3c'; // 오답: 빨간색
+        resultLabel.innerHTML = `<strong>❌ 틀렸습니다. (정답: ${cardData.answer})</strong>`;
+    }
+
+    updateCardScoreDisplay();
+
+    // 20문제를 모두 풀었을 때 (모든 카드가 처리됨)
+    if (cardsFlippedCount === cardModeQuestions.length) {
+        setTimeout(() => {
+            score = cardQuizScore; 
+            showResult();
+        }, 2000);
     }
 }
 
 /**
- * 카드 퀴즈 점수판을 업데이트합니다.
+ * 3. 카드 점수판 업데이트
  */
 function updateCardScoreDisplay() {
-    currentScoreElement.textContent = `${cardQuizScore}회 정답 (${cardsFlippedCount}회 시도)`;
-    const remaining = cardModeQuestions.filter(c => !c.completed).length;
-    questionNumberElement.textContent = `남은 문제: ${remaining} / 20`;
+    currentScoreElement.textContent = `맞힌 개수: ${cardQuizScore}개`;
+    questionNumberElement.textContent = `진행도: ${cardsFlippedCount} / 20`;
 }
-
-
 // --- 퀴즈 시작 함수 (모드 분기 포함) ---
 
 /**
@@ -1078,24 +1029,6 @@ document.addEventListener('keydown', (event) => {
                 event.preventDefault();
             }
         }
-    }
-    
-    // 2. 카드 퀴즈 키보드 이벤트
-    if (cardQuizArea && cardQuizArea.style.display === 'block') {
-        // '정답' 버튼 (Enter, C)
-        if (event.key === 'c' || event.key === 'C' || event.key === 'Enter') {
-            if (cardCorrectButton.style.display !== 'none') {
-                cardCorrectButton.click(); 
-                event.preventDefault();
-            }
-        } 
-        // '다음/넘어가기' 버튼 (ArrowRight, Space)
-        else if (event.key === 'ArrowRight' || event.key === ' ') {
-             if (cardNextButton.style.display !== 'none') {
-                 cardNextButton.click(); // '다음' 버튼 클릭 (정답이든 오답이든 넘어갈 때)
-                 event.preventDefault();
-             }
-          }
     }
     
     // 3. 결과 화면에서 랭킹 화면으로 돌아가기
