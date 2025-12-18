@@ -561,9 +561,7 @@ const timeLeftElement = document.getElementById('time-left');
 
 // ✅ 카드 퀴즈 전용 DOM 요소 추가
 const cardQuizArea = document.getElementById('card-quiz-area');
-const cardContainer = document.getElementById('card-container');
-const cardCorrectButton = document.getElementById('card-correct-button');
-const cardNextButton = document.getElementById('card-next-button');
+const cardContainer = document.getElementById('card-container');;
 
 
 // =======================================================
@@ -934,8 +932,6 @@ function startQuiz(mode) {
     // 퀴즈 상태 초기화
     selectRandomQuestions();
     
-    // 🚨 selectRandomQuestions에서 allQuestions이 비어 있으면 여기서 함수가 종료될 수 있습니다.
-
     // 화면 전환
     homeScreen.style.display = 'none';
     mainQuizContainer.style.display = 'block';
@@ -945,7 +941,7 @@ function startQuiz(mode) {
     quizArea.style.display = 'none';
     cardQuizArea.style.display = 'none';
     timerDisplay.style.display = 'none';
-    stopTimer(); // 타이머 확실히 중지
+    stopTimer(); 
 
     // 모드별 화면 설정 분기
     if (currentQuizMode === 'speed') {
@@ -956,12 +952,13 @@ function startQuiz(mode) {
         optionsContainer.style.display = 'block';
         displayQuestion();
     } else if (currentQuizMode === 'card') {
-        // ✅ 카드 퀴즈 설정
+        // ✅ 카드 퀴즈 설정 (불필요한 버튼 제어 삭제됨)
         cardQuizArea.style.display = 'block';
-        currentScoreElement.textContent = '0점 (0회 시도)'; // 점수 초기화 텍스트
-        explanationTextElement.textContent = ""; // 설명 초기화 (O/X에서 사용되던 요소)
+        currentScoreElement.textContent = '현재 점수: 0점'; 
+        explanationTextElement.textContent = ""; 
         initializeCardQuiz();
-    } else { // O/X 퀴즈 설정
+    } else { 
+        // O/X 퀴즈 설정
         quizArea.style.display = 'block';
         explanationTextElement.textContent = ""; 
         nextButton.style.display = 'block'; 
@@ -969,7 +966,6 @@ function startQuiz(mode) {
         displayQuestion();
     }
 }
-
 
 // --- 이벤트 리스너 (사용자 동작 감지) ---
 
@@ -1000,10 +996,6 @@ optionsContainer.addEventListener('click', (event) => {
         checkAnswer(selectedAnswer);
     }
 });
-
-// ✅ 카드 퀴즈 이벤트 리스너 추가
-cardCorrectButton.addEventListener('click', markCardAsCorrect);
-cardNextButton.addEventListener('click', goToNextCard);
 
 
 // 키보드 이벤트 리스너 (전체 로직 완성)
