@@ -564,17 +564,13 @@ const cardQuizArea = document.getElementById('card-quiz-area');
 const cardContainer = document.getElementById('card-container');;
 
 
-// =======================================================
-// 랭킹 기록 저장 및 불러오기 함수 (모드별 분리 로직 유지)
-// =======================================================
-
 /**
- * 최종 점수를 Supabase에 저장합니다. (모드별 점수 저장 로직 분기)
+ * 최종 점수를 Supabase에 저장합니다.
+ */
 async function saveResult() {
     let rankCriteria = 0; 
     
     if (currentQuizMode === 'speed') {
-        // 맞힌 개수 우선, 남은 시간 보조 (예: 12개 맞힘, 40초 남음 -> 12040)
         rankCriteria = (score * 1000) + timeLeft; 
     } else if (currentQuizMode === 'ox') {
         rankCriteria = score; 
@@ -583,6 +579,7 @@ async function saveResult() {
     }
     
     try {
+        // 1. 데이터 저장 (await 사용으로 완료될 때까지 기다림)
         const { error } = await quizAppSupabase 
             .from('quiz_results')
             .insert([
@@ -595,12 +592,14 @@ async function saveResult() {
 
         if (error) throw error;
         
-        console.log('결과 저장 성공:', rankCriteria, '모드:', currentQuizMode);
-        loadAllRankings(); 
+        console.log('결과 저장 성공!');
+
+        // 2. 저장 성공 후에만 랭킹을 새로 불러옵니다.
+        // 이때 await를 써서 랭킹 데이터를 다 가져온 후 다음 단계로 넘어가게 합니다.
+        await loadAllRankings(); 
 
     } catch (error) {
         console.error('결과 저장 중 오류:', error.message);
-        finalScoreElement.textContent += ` (기록 저장 실패: ${error.message})`;
     }
 }
 /**
@@ -869,39 +868,51 @@ function initializeCardQuiz() {
 /**
  * 2. O/X 버튼 클릭 시 정답 확인 및 카드 색상 변경
  */
+/**
+ * 2. O/X 버튼 클릭 시 정답 확인 및 카드 스타일 업데이트 (배경색 변경 및 텍스트 전환)
+ */
 function checkCardAnswer(index, userChoice) {
     const cardData = cardModeQuestions[index];
     const cardElement = cardContainer.querySelector(`[data-index="${index}"]`);
     const innerElement = cardElement.querySelector('.flip-card-inner');
+    const backSide = cardElement.querySelector('.flip-card-back');
+    
+    // 내부 요소들 참조
+    const questionText = backSide.querySelector('.card-question-text');
     const btnGroup = document.getElementById(`btn-group-${index}`);
     const resultInfo = document.getElementById(`result-info-${index}`);
     const resultLabel = resultInfo.querySelector('.result-label');
 
     if (cardData.status !== 'pending') return;
 
+    // 1. 문제 텍스트와 버튼 그룹을 완전히 제거/숨김
+    questionText.style.display = 'none';
     btnGroup.style.display = 'none';
+
+    // 2. 결과 정보(설명) 표시
     resultInfo.style.display = 'block';
     cardsFlippedCount++;
 
-if (userChoice === cardData.answer) {
+    // 3. 정답 여부에 따른 카드 전체 배경색 및 메시지 변경
+    if (userChoice === cardData.answer) {
         cardData.status = 'correct';
         cardQuizScore++;
-        // .flip-card-back 요소에 클래스나 직접 색상을 추가
-        const backSide = cardElement.querySelector('.flip-card-back');
-        backSide.style.backgroundColor = '#2ecc71'; // 초록색
+        // 카드 전체 배경색을 초록색으로 변경
+        backSide.style.backgroundColor = '#2ecc71'; 
         backSide.style.color = 'white';
         resultLabel.innerHTML = "<strong>✅ 정답입니다!</strong>";
     } else {
         cardData.status = 'incorrect';
-        const backSide = cardElement.querySelector('.flip-card-back');
-        backSide.style.backgroundColor = '#e74c3c'; // 빨간색
+        // 카드 전체 배경색을 빨간색으로 변경
+        backSide.style.backgroundColor = '#e74c3c'; 
         backSide.style.color = 'white';
         resultLabel.innerHTML = `<strong>❌ 틀렸습니다. (정답: ${cardData.answer})</strong>`;
     }
 
+    // 점수판 업데이트
     updateCardScoreDisplay();
 
-    // 20문제를 모두 풀었을 때 (모든 카드가 처리됨)
+    // 모든 문제를 풀었는지 확인
     if (cardsFlippedCount === cardModeQuestions.length) {
         setTimeout(() => {
             score = cardQuizScore; 
@@ -909,7 +920,6 @@ if (userChoice === cardData.answer) {
         }, 2000);
     }
 }
-
 /**
  * 3. 카드 점수판 업데이트
  */
