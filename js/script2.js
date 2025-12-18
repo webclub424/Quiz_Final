@@ -577,12 +577,26 @@ async function saveResult() {
     let rankCriteria = 0; // 랭킹 정렬 기준
     
     if (currentQuizMode === 'speed') {
-        rankCriteria = finalTime; // 스피드: 남은 시간 (높을수록 좋음, 즉 60-걸린시간)
+        // ✅ [수정] 맞힌 개수(score)를 우선순위로 하고, 남은 시간(timeLeft)을 보조 지표로 사용
+        // 예: 12문제 맞히고 40초 남음 -> 12040점
+        // 예: 10문제 맞히고 50초 남음 -> 10050점 (12문제가 무조건 높음)
+        rankCriteria = (score * 1000) + timeLeft; 
     } else if (currentQuizMode === 'ox') {
-        rankCriteria = score; // O/X: 점수 (높을수록 좋음)
+        rankCriteria = score; 
     } else if (currentQuizMode === 'card') {
-        rankCriteria = cardQuizScore; // ✅ 카드 퀴즈: 점수 (높을수록 좋음)
+        rankCriteria = cardQuizScore; 
     }
+    
+    try {
+        const { error } = await quizAppSupabase 
+            .from('quiz_results')
+            .insert([
+                { 
+                    nickname: nickname, 
+                    score: rankCriteria, // 조합된 점수 저장
+                    quiz_type: currentQuizMode 
+                },
+            ]);
     
     try {
         // 🚨 supabase 대신 quizAppSupabase 사용
