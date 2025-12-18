@@ -618,7 +618,7 @@ async function loadRanking(mode, listElement) {
     listElement.innerHTML = '<li>랭킹을 불러오는 중...</li>';
 
     try {
-        let ascendingOrder = (mode !== 'speed'); // O/X와 Card는 점수가 높을수록(내림차순) 상위. Speed는 남은 시간이 높을수록 상위(내림차순).
+        let ascendingOrder = false;
 
         // 🚨 supabase 대신 quizAppSupabase 사용
         let { data, error } = await quizAppSupabase
