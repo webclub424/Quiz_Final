@@ -573,13 +573,14 @@ const cardNextButton = document.getElementById('card-next-button');
 /**
  * 최종 점수를 Supabase에 저장합니다. (모드별 점수 저장 로직 분기)
  */
+/**
+ * 최종 점수를 Supabase에 저장합니다.
+ */
 async function saveResult() {
-    let rankCriteria = 0; // 랭킹 정렬 기준
+    let rankCriteria = 0; 
     
     if (currentQuizMode === 'speed') {
-        // ✅ [수정] 맞힌 개수(score)를 우선순위로 하고, 남은 시간(timeLeft)을 보조 지표로 사용
-        // 예: 12문제 맞히고 40초 남음 -> 12040점
-        // 예: 10문제 맞히고 50초 남음 -> 10050점 (12문제가 무조건 높음)
+        // 맞힌 개수 우선(1000단위), 남은 시간 차선(1단위)
         rankCriteria = (score * 1000) + timeLeft; 
     } else if (currentQuizMode === 'ox') {
         rankCriteria = score; 
@@ -593,18 +594,6 @@ async function saveResult() {
             .insert([
                 { 
                     nickname: nickname, 
-                    score: rankCriteria, // 조합된 점수 저장
-                    quiz_type: currentQuizMode 
-                },
-            ]);
-    
-    try {
-        // 🚨 supabase 대신 quizAppSupabase 사용
-        const { error } = await quizAppSupabase 
-            .from('quiz_results')
-            .insert([
-                { 
-                    nickname: nickname, 
                     score: rankCriteria, 
                     quiz_type: currentQuizMode 
                 },
@@ -612,17 +601,14 @@ async function saveResult() {
 
         if (error) throw error;
         
-        console.log('결과가 성공적으로 저장되었습니다. (점수/시간:', rankCriteria, '모드:', currentQuizMode, ')');
-        
-        loadAllRankings(); 
+        console.log('결과 저장 성공:', rankCriteria, '모드:', currentQuizMode);
+        loadAllRankings(); // 저장 후 랭킹 새로고침
 
     } catch (error) {
         console.error('결과 저장 중 오류:', error.message);
-        document.getElementById('final-score').textContent += ` (기록 저장 실패: ${error.message})`;
-        alert('결과 저장에 실패했습니다. (콘솔 확인)');
+        alert('결과 저장에 실패했습니다.');
     }
 }
-
 /**
  * Supabase에서 특정 모드의 랭킹을 불러와 화면에 표시합니다.
  */
