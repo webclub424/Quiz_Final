@@ -628,22 +628,17 @@ async function saveResult() {
  */
 async function loadRanking(mode, listElement) {
     if (!listElement) return;
-
     listElement.innerHTML = '<li>랭킹을 불러오는 중...</li>';
 
     try {
-        let ascendingOrder = false;
-
-        // 🚨 supabase 대신 quizAppSupabase 사용
         let { data, error } = await quizAppSupabase
             .from('quiz_results')
             .select('nickname, score')
             .eq('quiz_type', mode) 
-            .order('score', { ascending: ascendingOrder })
+            .order('score', { ascending: false }) // 무조건 내림차순
             .limit(10);
 
         if (error) throw error;
-
         listElement.innerHTML = '';
 
         if (data && data.length > 0) {
@@ -652,13 +647,14 @@ async function loadRanking(mode, listElement) {
                 let scoreText;
 
                 if (mode === 'speed') {
-                    const timeTaken = 60 - item.score; 
-                    const minutes = Math.floor(timeTaken / 60);
-                    const seconds = timeTaken % 60;
-                    const formattedTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-                    scoreText = formattedTime; 
+                    // ✅ [수정] 조합된 점수를 다시 분해
+                    const solvedCount = Math.floor(item.score / 1000); // 12040 -> 12
+                    const timeLeftVal = item.score % 1000;             // 12040 -> 40
+                    const timeTaken = 60 - timeLeftVal;                // 걸린 시간 계산
+
+                    scoreText = `${solvedCount}개 (${timeTaken}초)`;
                 } else if (mode === 'card') {
-                    scoreText = `${item.score}회 정답`; // 카드 퀴즈는 정답 횟수를 표시
+                    scoreText = `${item.score}회 정답`;
                 } else {
                     scoreText = `${item.score}점`;
                 }
@@ -668,13 +664,11 @@ async function loadRanking(mode, listElement) {
         } else {
             listElement.innerHTML = '<li>아직 등록된 기록이 없습니다.</li>';
         }
-
     } catch (error) {
         console.error('랭킹 로드 중 오류:', error.message);
         listElement.innerHTML = '<li>랭킹 로드 실패.</li>';
     }
 }
-
 
 /**
  * 모든 퀴즈 모드의 랭킹을 한 번에 로드합니다. (홈 화면 표시용)
