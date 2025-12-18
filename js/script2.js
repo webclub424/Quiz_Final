@@ -630,8 +630,6 @@ async function loadRanking(mode, listElement) {
                     const timeLeftVal = item.score % 1000;
                     const timeTaken = 60 - timeLeftVal;
                     scoreText = `${solvedCount}개 (${timeTaken}초)`;
-                } else if (mode === 'card') {
-                    scoreText = `${item.score}회 정답`;
                 } else {
                     scoreText = `${item.score}점`;
                 }
