@@ -254,22 +254,27 @@ h1 {
 /* ======================================================= */
 /* ✅ 카드 퀴즈 전용 (Card Quiz) */
 /* ======================================================= */
+/* ======================================================= */
+/* ✅ 카드 퀴즈 전용 (수정된 로직 반영) */
+/* ======================================================= */
 #card-quiz-area {
     text-align: center;
+    width: 100%;
 }
 
 #card-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* 반응형 그리드 */
-    gap: 15px;
+    /* 카드가 4개씩 깔끔하게 정렬되도록 조정 */
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
+    gap: 20px;
     padding: 20px 0;
     margin-bottom: 20px;
 }
 
 .flip-card {
     background-color: transparent;
-    height: 150px;
-    perspective: 1000px; /* 3D 효과를 위한 원근법 */
+    height: 220px; /* 문제와 버튼이 다 들어가도록 높이 확보 */
+    perspective: 1000px;
     cursor: pointer;
 }
 
@@ -278,10 +283,11 @@ h1 {
     width: 100%;
     height: 100%;
     text-align: center;
-    transition: transform 0.6s;
+    transition: transform 0.6s, background-color 0.4s; /* 배경색 변화 애니메이션 추가 */
     transform-style: preserve-3d;
-    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
-    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border-radius: 12px;
+    background-color: #fff; /* 기본 카드는 흰색 배경 */
 }
 
 /* 카드가 뒤집혔을 때 */
@@ -293,88 +299,112 @@ h1 {
     position: absolute;
     width: 100%;
     height: 100%;
-    backface-visibility: hidden; /* 뒤집힌 면 숨기기 */
-    border-radius: 10px;
+    backface-visibility: hidden;
+    border-radius: 12px;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    padding: 10px;
+    padding: 15px;
     box-sizing: border-box;
-    overflow: hidden;
 }
 
+/* 카드 앞면: 질문 번호 (사용자 취향에 따라 흰색 유지 가능) */
 .flip-card-front {
-    background-color: #f39c12; /* 카드 앞면 (문제 번호) */
+    background-color: #fff; 
+    color: #2c3e50;
+    border: 2px solid #3498db;
+}
+
+.card-badge {
+    background-color: #3498db;
     color: white;
-    font-size: 1.5em;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 0.9em;
+    margin-bottom: 10px;
 }
 
-.flip-card-front h2 {
-    margin: 0;
-}
-
-.card-hint {
-    font-size: 0.8em;
-    opacity: 0.8;
-}
-
+/* 카드 뒷면: 문제 및 O/X 버튼 */
 .flip-card-back {
-    background-color: #3498db; /* 카드 뒷면 (정답 및 설명) */
-    color: white;
+    background-color: #fff; /* 정답 선택 전까지는 흰색 */
+    color: #333;
     transform: rotateY(180deg);
-    font-size: 0.9em;
-    text-align: left;
 }
 
-.card-explanation-box {
-    margin-top: 5px;
-    padding-top: 5px;
-    border-top: 1px solid rgba(255, 255, 255, 0.5);
-    font-size: 0.9em;
-}
-
-/* 완료된 카드 시각적 처리 */
-.flip-card.completed .flip-card-inner {
-    opacity: 0.5; /* 흐리게 */
-    transform: rotateY(0deg);
-    pointer-events: none; /* 클릭 방지 */
-    box-shadow: none;
-}
-.flip-card.completed .flip-card-front {
-    background-color: #bdc3c7; /* 완료된 카드 색상 */
-}
-
-
-.card-control-buttons {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    margin-top: 20px;
-}
-
-#card-correct-button, #card-next-button {
-    padding: 15px 30px;
-    font-size: 1.1em;
+.card-question-text {
+    font-size: 1em;
     font-weight: bold;
-    border: none;
-    border-radius: 8px;
+    margin-bottom: 15px;
+    word-break: keep-all;
+}
+
+/* 카드 내부 O/X 버튼 스타일 */
+.card-btn-group {
+    display: flex;
+    gap: 10px;
+}
+
+.card-ox-btn {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 2px solid #ddd;
+    background: white;
+    font-size: 1.2em;
+    font-weight: bold;
     cursor: pointer;
-    transition: background-color 0.3s;
+    transition: all 0.2s;
 }
 
-#card-correct-button {
-    background-color: #27ae60;
-    color: white;
-}
-#card-correct-button:hover { background-color: #2ecc71; }
+.o-btn { color: #2ecc71; border-color: #2ecc71; }
+.x-btn { color: #e74c3c; border-color: #e74c3c; }
 
-#card-next-button {
-    background-color: #95a5a6;
-    color: white;
+.card-ox-btn:hover {
+    transform: scale(1.1);
+    background-color: #f9f9f9;
 }
-#card-next-button:hover { background-color: #7f8c8d; }
 
+/* 결과 텍스트 스타일 */
+.card-result-info {
+    width: 100%;
+    animation: fadeIn 0.5s;
+}
+
+.result-label {
+    font-size: 1.1em;
+    margin-bottom: 8px;
+    color: white; /* 배경색이 변하므로 텍스트는 흰색 */
+}
+
+.result-explanation {
+    font-size: 0.85em;
+    line-height: 1.4;
+    color: rgba(255, 255, 255, 0.9);
+    background: rgba(0, 0, 0, 0.1);
+    padding: 8px;
+    border-radius: 8px;
+}
+
+/* 결과에 따른 카드 배경색 (JS에서 인라인으로 들어가지만 CSS에서 우선순위 보조) */
+/* 이 설정이 있어야 JS에서 변경한 색상이 텍스트와 잘 어울립니다. */
+.flip-card-back.correct-bg { background-color: #2ecc71 !important; color: white !important; }
+.flip-card-back.incorrect-bg { background-color: #e74c3c !important; color: white !important; }
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* 모바일 대응 */
+@media (max-width: 600px) {
+    #card-container {
+        grid-template-columns: repeat(2, 1fr); /* 모바일은 2열 */
+    }
+    .flip-card {
+        height: 200px;
+    }
+}
 
 /* ======================================================= */
 /* 결과 화면 */
