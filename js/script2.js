@@ -3,7 +3,9 @@ const SUPABASE_ANON_KEY = 'sb_publishable_k5orycO4a8oQrDVJ-cIzhg_EUp-LvHA';
 
 // 🚨 변수 이름 충돌을 해결하기 위해 'supabase' 대신 'quizAppSupabase'를 사용합니다.
 const quizAppSupabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
+const all = [
+    sdf{ 
+    
 // 💡 퀴즈 데이터 (이전에 넣으신 약 80~100개의 문제 배열 전체를 유지합니다.)
 const allQuestions = [
     {
