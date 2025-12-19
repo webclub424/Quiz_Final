@@ -1,10 +1,8 @@
 const SUPABASE_URL = 'https://kkzlhgsnizzpnfjwhhim.supabase.co'; 
 const SUPABASE_ANON_KEY = 'sb_publishable_k5orycO4a8oQrDVJ-cIzhg_EUp-LvHA'; 
 
-// 🚨 변수 이름 충돌을 해결하기 위해 'supabase' 대신 'quizAppSupabase'를 사용합니다.
 const quizAppSupabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// 💡 퀴즈 데이터 (이전에 넣으신 약 80~100개의 문제 배열 전체를 유지합니다.)
 const allQuestions = [
     {
         question: "플라스틱 빨대보다 종이 빨대가 항상 더 친환경적이다.",
@@ -508,40 +506,36 @@ const allQuestions = [
     }
 ];
 
-// ✅ 전역 변수 설정 (모드 추가 및 초기화)
 let currentQuestionIndex = 0; 
 let score = 0;
 let nickname = '';
 let currentQuizMode = 'ox'; // 현재 퀴즈 모드 ('ox', 'speed', 'card' 중 하나)
 
-// ✅ 스피드 퀴즈 타이머 관련 변수
 let timer; 
 let timeLeft = 60; 
 let finalTime = 0; 
 let isTimerRunning = false;
 
-// ✅ 카드 퀴즈 관련 변수 추가
 let cardModeQuestions = [];
 let cardsFlippedCount = 0;
-let cardQuizScore = 0; // 카드 퀴즈는 점수 계산 방식이 다르므로 별도 변수 사용
+let cardQuizScore = 0; 
 
-// HTML 요소 정의
 const homeScreen = document.getElementById('home-screen');
 const mainQuizContainer = document.getElementById('main-quiz-container');
 const nicknameInput = document.getElementById('nickname-input');
 const authMessage = document.getElementById('auth-message');
 const restartButton = document.getElementById('restart-button');
 
-// 퀴즈 모드 선택 버튼
+
 const modeButtons = document.querySelectorAll('.mode-button');
 
-// 랭킹 리스트 요소
+
 const rankingListOx = document.getElementById('ranking-list-ox');
 const rankingListSpeed = document.getElementById('ranking-list-speed');
-const rankingListCard = document.getElementById('ranking-list-card'); // 카드 랭킹
+const rankingListCard = document.getElementById('ranking-list-card'); 
 
-// 퀴즈 화면 요소 (Quiz Area Elements)
-const quizArea = document.getElementById('quiz-area'); // O/X, Speed 퀴즈 영역
+
+const quizArea = document.getElementById('quiz-area'); 
 const resultScreen = document.getElementById('result-screen');
 const questionNumberElement = document.getElementById('question-number');
 const questionTextElement = document.getElementById('question-text');
@@ -551,22 +545,20 @@ const explanationTextElement = document.getElementById('explanation-text');
 const currentScoreElement = document.getElementById('current-score');
 const finalScoreElement = document.getElementById('final-score');
 
-// O/X 및 스피드 퀴즈 전용
+
 const nextButton = document.getElementById('next-button');
 const optionsContainer = document.getElementById('options');
 
-// 스피드 퀴즈 전용 DOM 요소
+
 const timerDisplay = document.getElementById('timer-display');
 const timeLeftElement = document.getElementById('time-left');
 
-// ✅ 카드 퀴즈 전용 DOM 요소 추가
+
 const cardQuizArea = document.getElementById('card-quiz-area');
 const cardContainer = document.getElementById('card-container');;
 
 
-/**
- * 최종 점수를 Supabase에 저장합니다.
- */
+
 async function saveResult() {
     let rankCriteria = 0; 
     
