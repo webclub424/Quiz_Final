@@ -1044,7 +1044,7 @@ document.addEventListener('keydown', (event) => {
         }
     }
 });
-documen [.
+
 
 // 🌟 페이지 로드 시 초기 화면 설정 및 모든 랭킹 로드
 document.addEventListener('DOMContentLoaded', () => {
