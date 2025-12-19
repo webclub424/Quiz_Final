@@ -509,7 +509,7 @@ const allQuestions = [
 let currentQuestionIndex = 0; 
 let score = 0;
 let nickname = '';
-let currentQuizMode = 'ox'; // 현재 퀴즈 모드 ('ox', 'speed', 'card' 중 하나)
+let currentQuizMode = 'ox'; 
 
 let timer; 
 let timeLeft = 60; 
