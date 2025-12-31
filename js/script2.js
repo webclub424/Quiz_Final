@@ -571,7 +571,6 @@ async function saveResult() {
     }
     
     try {
-        // 1. 데이터 저장 (await 사용으로 완료될 때까지 기다림)
         const { error } = await quizAppSupabase 
             .from('quiz_results')
             .insert([
@@ -586,17 +585,13 @@ async function saveResult() {
         
         console.log('결과 저장 성공!');
 
-        // 2. 저장 성공 후에만 랭킹을 새로 불러옵니다.
-        // 이때 await를 써서 랭킹 데이터를 다 가져온 후 다음 단계로 넘어가게 합니다.
         await loadAllRankings(); 
 
     } catch (error) {
         console.error('결과 저장 중 오류:', error.message);
     }
 }
-/**
- * Supabase에서 특정 모드의 랭킹을 불러와 화면에 표시합니다.
- */
+
 async function loadRanking(mode, listElement) {
     if (!listElement) return;
     listElement.innerHTML = '<li>랭킹을 불러오는 중...</li>';
@@ -636,25 +631,21 @@ async function loadRanking(mode, listElement) {
         listElement.innerHTML = '<li>랭킹 로드 실패.</li>';
     }
 }
-/**
- * 모든 퀴즈 모드의 랭킹을 한 번에 로드합니다. (홈 화면 표시용)
- */
+
 function loadAllRankings() {
     loadRanking('ox', rankingListOx);
     loadRanking('speed', rankingListSpeed);
     loadRanking('card', rankingListCard);
 } 
 
-// --- 퀴즈 공통 로직 코드 ---
 let currentQuestions = [];
-let isAnswered = false; // O/X 퀴즈 정답 체크 여부 플래그
+let isAnswered = false; 
 
-// 1. 80문제 중 20문제 랜덤 선택 함수 (공통)
+
 function selectRandomQuestions() {
-    // 🚨 allQuestions 배열이 비어 있으면 여기서 오류가 발생할 수 있습니다.
     if (allQuestions.length === 0) {
-        console.error("오류: 퀴즈 데이터(allQuestions)가 비어 있습니다.");
-        alert("퀴즈 데이터가 로드되지 않아 퀴즈를 시작할 수 없습니다. 파일을 확인해주세요.");
+        console.error("오류: 퀴즈 데이터가 비어 있습니다.");
+        alert("퀴즈 데이터가 로드되지 않아 퀴즈를 시작할 수 없습니다.");
         return;
     }
     const shuffled = [...allQuestions].sort(() => 0.5 - Math.random());
@@ -663,18 +654,16 @@ function selectRandomQuestions() {
     score = 0;
     finalTime = 0; 
     isAnswered = false;
-    cardQuizScore = 0; // 카드 퀴즈 점수 초기화
-    cardsFlippedCount = 0; // 카드 퀴즈 진행 횟수 초기화
+    cardQuizScore = 0;
+    cardsFlippedCount = 0; 
 }
 
-// 2. 현재 문제 화면에 표시 함수 (O/X 및 스피드 퀴즈 전용)
 function displayQuestion() {
     const currentQuestion = currentQuestions[currentQuestionIndex];
     
     questionNumberElement.textContent = `Q. ${currentQuestionIndex + 1} / 20`;
     currentScoreElement.textContent = score;
     
-    // O/X와 스피드는 문제 텍스트 표시
     questionTextElement.textContent = currentQuestion.question;
     
     feedbackElement.style.display = 'none';
@@ -684,7 +673,6 @@ function displayQuestion() {
     isAnswered = false;
 }
 
-// 3. 정답 확인 및 피드백 처리 함수 (O/X 모드 전용)
 function checkAnswer(selectedAnswer) {
     if (isAnswered) return;
 
@@ -707,15 +695,12 @@ function checkAnswer(selectedAnswer) {
     
     isAnswered = true;
 
-    // 스피드 퀴즈 모드에서는 정답 체크 후 바로 다음 문제로 이동 (설명 생략)
     if (currentQuizMode === 'speed') {
         setTimeout(nextQuestion, 500); 
     }
 }
 
-// 4. 다음 문제 또는 결과 화면으로 이동 함수 (O/X 및 스피드 퀴즈 전용)
 function nextQuestion() {
-    // O/X 모드일 때 정답 체크 확인
     if (currentQuizMode === 'ox' && !isAnswered) {
         return; 
     }
@@ -730,18 +715,15 @@ function nextQuestion() {
     }
 }
 
-// 5. 결과 화면 표시 함수 (기록 저장 로직 포함)
 function showResult() {
-    // 모드별 마무리
     if (currentQuizMode === 'speed') {
         stopTimer();
-        finalTime = timeLeft; // 남은 시간 (점수 기준)
+        finalTime = timeLeft; 
     } else if (currentQuizMode === 'card') {
-        // 카드 퀴즈는 특별히 종료할 것이 없음.
     }
     
     quizArea.style.display = 'none';
-    cardQuizArea.style.display = 'none'; // 카드 영역 숨김
+    cardQuizArea.style.display = 'none'; 
     resultScreen.style.display = 'block';
     
     if (currentQuizMode === 'speed') {
@@ -758,13 +740,11 @@ function showResult() {
     restartButton.textContent = '다시 시작 / 랭킹 보기';
 }
 
-// --- 타이머 함수 (스피드 퀴즈 전용) ---
-
 function startTimer() {
     if (isTimerRunning) return;
     
     isTimerRunning = true;
-    timeLeft = 60; // 초기 시간 설정 (60초)
+    timeLeft = 60;
     timeLeftElement.textContent = timeLeft;
     timerDisplay.style.display = 'block';
 
@@ -773,13 +753,12 @@ function startTimer() {
         timeLeftElement.textContent = timeLeft;
 
         if (timeLeft <= 10) {
-            timerDisplay.style.color = '#E74C3C'; // 10초 미만은 빨간색
+            timerDisplay.style.color = '#E74C3C'; 
         } else {
-             timerDisplay.style.color = '#2980b9'; // 기본 파란색
+             timerDisplay.style.color = '#2980b9'; 
         }
 
         if (timeLeft <= 0) {
-            // 시간 종료 시
             stopTimer();
             finalTime = 0; 
             showResult(); 
@@ -792,18 +771,9 @@ function stopTimer() {
     clearInterval(timer);
     isTimerRunning = false;
     timerDisplay.style.display = 'none';
-    timerDisplay.style.color = '#2980b9'; // 색상 초기화
+    timerDisplay.style.color = '#2980b9'; 
 }
 
-// --- 카드 퀴즈 함수 (새로 추가) ---
-
-// ==========================================
-// 카드 퀴즈 새로운 로직 (O/X 직접 선택형)
-// ==========================================
-
-/**
- * 1. 카드 퀴즈 초기화: 20장의 카드를 생성합니다.
- */
 function initializeCardQuiz() {
     cardContainer.innerHTML = ''; 
     cardQuizScore = 0; 
@@ -842,7 +812,6 @@ function initializeCardQuiz() {
             </div>
         `;
         
-        // 앞면 클릭 시 뒤집기만 담당
         cardElement.querySelector('.flip-card-front').addEventListener('click', () => {
             if (!cardElement.classList.contains('flipped')) {
                 cardElement.classList.add('flipped');
@@ -855,19 +824,12 @@ function initializeCardQuiz() {
     updateCardScoreDisplay();
 }
 
-/**
- * 2. O/X 버튼 클릭 시 정답 확인 및 카드 색상 변경
- */
-/**
- * 2. O/X 버튼 클릭 시 정답 확인 및 카드 스타일 업데이트 (배경색 변경 및 텍스트 전환)
- */
 function checkCardAnswer(index, userChoice) {
     const cardData = cardModeQuestions[index];
     const cardElement = cardContainer.querySelector(`[data-index="${index}"]`);
     const innerElement = cardElement.querySelector('.flip-card-inner');
     const backSide = cardElement.querySelector('.flip-card-back');
     
-    // 내부 요소들 참조
     const questionText = backSide.querySelector('.card-question-text');
     const btnGroup = document.getElementById(`btn-group-${index}`);
     const resultInfo = document.getElementById(`result-info-${index}`);
@@ -875,34 +837,27 @@ function checkCardAnswer(index, userChoice) {
 
     if (cardData.status !== 'pending') return;
 
-    // 1. 문제 텍스트와 버튼 그룹을 완전히 제거/숨김
     questionText.style.display = 'none';
     btnGroup.style.display = 'none';
 
-    // 2. 결과 정보(설명) 표시
     resultInfo.style.display = 'block';
     cardsFlippedCount++;
 
-    // 3. 정답 여부에 따른 카드 전체 배경색 및 메시지 변경
     if (userChoice === cardData.answer) {
         cardData.status = 'correct';
         cardQuizScore++;
-        // 카드 전체 배경색을 초록색으로 변경
         backSide.style.backgroundColor = '#2ecc71'; 
         backSide.style.color = 'white';
         resultLabel.innerHTML = "<strong>✅ 정답입니다!</strong>";
     } else {
         cardData.status = 'incorrect';
-        // 카드 전체 배경색을 빨간색으로 변경
         backSide.style.backgroundColor = '#e74c3c'; 
         backSide.style.color = 'white';
         resultLabel.innerHTML = `<strong>❌ 틀렸습니다. (정답: ${cardData.answer})</strong>`;
     }
 
-    // 점수판 업데이트
     updateCardScoreDisplay();
 
-    // 모든 문제를 풀었는지 확인
     if (cardsFlippedCount === cardModeQuestions.length) {
         setTimeout(() => {
             score = cardQuizScore; 
@@ -910,19 +865,12 @@ function checkCardAnswer(index, userChoice) {
         }, 2000);
     }
 }
-/**
- * 3. 카드 점수판 업데이트
- */
+
 function updateCardScoreDisplay() {
     currentScoreElement.textContent = `맞힌 개수: ${cardQuizScore}개`;
     questionNumberElement.textContent = `진행도: ${cardsFlippedCount} / 20`;
 }
-// --- 퀴즈 시작 함수 (모드 분기 포함) ---
 
-/**
- * 퀴즈를 시작하고 화면을 전환하는 함수.
- * @param {string} mode - 시작할 퀴즈의 타입 ('ox', 'speed', 'card')
- */
 function startQuiz(mode) {
     nickname = nicknameInput.value.trim();
 
@@ -934,21 +882,17 @@ function startQuiz(mode) {
     authMessage.textContent = ''; 
     currentQuizMode = mode; 
     
-    // 퀴즈 상태 초기화
     selectRandomQuestions();
     
-    // 화면 전환
     homeScreen.style.display = 'none';
     mainQuizContainer.style.display = 'block';
     resultScreen.style.display = 'none';
     
-    // 모든 퀴즈 영역 초기화
     quizArea.style.display = 'none';
     cardQuizArea.style.display = 'none';
     timerDisplay.style.display = 'none';
     stopTimer(); 
 
-    // 모드별 화면 설정 분기
     if (currentQuizMode === 'speed') {
         quizArea.style.display = 'block';
         startTimer();
@@ -957,13 +901,11 @@ function startQuiz(mode) {
         optionsContainer.style.display = 'block';
         displayQuestion();
     } else if (currentQuizMode === 'card') {
-        // ✅ 카드 퀴즈 설정 (불필요한 버튼 제어 삭제됨)
         cardQuizArea.style.display = 'block';
         currentScoreElement.textContent = '현재 점수: 0점'; 
         explanationTextElement.textContent = ""; 
         initializeCardQuiz();
     } else { 
-        // O/X 퀴즈 설정
         quizArea.style.display = 'block';
         explanationTextElement.textContent = ""; 
         nextButton.style.display = 'block'; 
@@ -972,9 +914,6 @@ function startQuiz(mode) {
     }
 }
 
-// --- 이벤트 리스너 (사용자 동작 감지) ---
-
-// 닉네임 입력 후 퀴즈 모드 버튼 이벤트
 modeButtons.forEach(button => {
     button.addEventListener('click', () => {
         const mode = button.getAttribute('data-mode');
@@ -982,8 +921,6 @@ modeButtons.forEach(button => {
     });
 });
 
-
-// 퀴즈 화면 내 '다시 시작' 버튼 이벤트 (홈 화면으로 돌아감)
 restartButton.addEventListener('click', () => {
     stopTimer(); 
     mainQuizContainer.style.display = 'none';
@@ -991,8 +928,6 @@ restartButton.addEventListener('click', () => {
     loadAllRankings();
 });
 
-
-// O/X 및 스피드 퀴즈 이벤트
 nextButton.addEventListener('click', nextQuestion);
 
 optionsContainer.addEventListener('click', (event) => {
@@ -1002,13 +937,8 @@ optionsContainer.addEventListener('click', (event) => {
     }
 });
 
-
-// 키보드 이벤트 리스너 (전체 로직 완성)
 document.addEventListener('keydown', (event) => {
-    // 1. O/X 및 스피드 퀴즈 영역
     if (quizArea && quizArea.style.display === 'block') {
-        
-        // O/X 버튼 선택 (1/O: O, 2/X: X)
         if (optionsContainer.style.display === 'block') {
             const answerButtons = optionsContainer.querySelectorAll('.answer-button');
             
@@ -1019,7 +949,6 @@ document.addEventListener('keydown', (event) => {
             }
         }
         
-        // 다음 문제로 이동 (O/X 모드에서만 수동 이동)
         if (isAnswered && currentQuizMode === 'ox') { 
             if (event.key === 'ArrowRight' || event.key === ' ' || event.key === 'Enter') {
                 nextQuestion();
@@ -1028,7 +957,6 @@ document.addEventListener('keydown', (event) => {
         }
     }
     
-    // 3. 결과 화면에서 랭킹 화면으로 돌아가기
     if (resultScreen && resultScreen.style.display === 'block') {
         if (event.key === 'Enter' || event.key === ' ') {
             restartButton.click();
@@ -1037,8 +965,6 @@ document.addEventListener('keydown', (event) => {
     }
 });
 
-
-// 🌟 페이지 로드 시 초기 화면 설정 및 모든 랭킹 로드
 document.addEventListener('DOMContentLoaded', () => {
     homeScreen.style.display = 'block';
     mainQuizContainer.style.display = 'none';
